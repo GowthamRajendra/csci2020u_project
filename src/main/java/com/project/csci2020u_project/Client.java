@@ -1,6 +1,7 @@
-package com.example.lab10;
+package com.project.csci2020u_project;
 
 import javafx.application.Application;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -9,11 +10,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.Scanner;
 
 public class Client extends Application {
 
@@ -23,6 +24,7 @@ public class Client extends Application {
     public void start(Stage primaryStage) throws IOException {
         Socket sock = new Socket("localhost", 6666);
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
         GridPane gp = new GridPane();
         gp.setPadding( new Insets(20) );
@@ -38,9 +40,29 @@ public class Client extends Application {
         Button sendButton = new Button("Send");
         Button exitButton = new Button("Exit");
 
-        sendButton.setOnAction(e -> {
-            pWriter.println(usernameTF.getText() + ": " + messageTF.getText());
-        });
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+
+                while (sock.isConnected())
+                {
+                    sendButton.setOnAction(e -> pWriter.println(usernameTF.getText() + ": " + messageTF.getText()));
+
+                    String line;
+                    if((line = bufferedReader.readLine()) != null)
+                    {
+                        System.out.println(line);
+                    }
+                }
+
+
+                return null;
+            }
+        };
+
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
 
         exitButton.setOnAction(e -> {
             primaryStage.close();
@@ -58,7 +80,7 @@ public class Client extends Application {
         gp.add(sendButton, 0, 2);
         gp.add(exitButton, 0, 3);
 
-        primaryStage.setTitle("Lab 10 Client Ravichandra Pogaku 100784105");
+        primaryStage.setTitle("ClientA");
         Scene scene = new Scene(gp);
         primaryStage.setScene(scene);
         primaryStage.setWidth( 300 );
