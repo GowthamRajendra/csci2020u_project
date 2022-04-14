@@ -115,11 +115,18 @@ public class Client extends Application {
         saveImgView.setFitWidth(15);
         saveImgView.setPreserveRatio(true);
 
+        // setting image for stats option (lets user see sats of current chatroom)
+        Image statsImg = new Image("file:icons/statsIcon.png");
+        ImageView statsImgView = new ImageView(statsImg);
+        statsImgView.setFitHeight(15);
+        statsImgView.setFitWidth(15);
+        statsImgView.setPreserveRatio(true);
+
         // creating and adding options
         MenuItem rename = new MenuItem("Rename", renameImgView);
         MenuItem exit = new MenuItem("Leave",leaveImgView);
         MenuItem saveText = new MenuItem("Save Text", saveImgView);
-        MenuItem stats = new MenuItem("User Stats");
+        MenuItem stats = new MenuItem("User Stats", statsImgView);
 
         menu.getItems().addAll(rename, saveText, stats, exit);
 
@@ -132,7 +139,7 @@ public class Client extends Application {
             // opening file chooser to let user save the text file
             FileChooser fileOpen = new FileChooser();
             fileOpen.setTitle("Open");
-            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files","*.txt"));
             File selectedSaveFile = fileOpen.showSaveDialog(primaryStage);
 
             // writing to text file
@@ -159,7 +166,7 @@ public class Client extends Application {
             // opening file chooser to let user upload text file
             FileChooser fileOpen = new FileChooser();
             fileOpen.setTitle("Open");
-            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files","*.txt"));
             File selectedOpenFile = fileOpen.showOpenDialog(primaryStage);
 
             // reading in text file
@@ -213,7 +220,7 @@ public class Client extends Application {
         };
 
         // starts thread for socket
-        // sendTexts has seperate thread so the ui doesn't freeze up
+        // sendTexts has separate thread so the ui doesn't freeze up
         Thread t = new Thread(sendTexts);
         t.setDaemon(true);
         t.start();
@@ -269,13 +276,20 @@ public class Client extends Application {
         primaryStage.setTitle("Chatroom");
         Scene mainScene = new Scene(chatroomVbox);
 
-        //Stats UI
+        //Stats UI where stats of the current chatroom is shown (opens new window)
         Stage statStage = new Stage();
+        statStage.setTitle("Statistics");
+        statStage.getIcons().add(statsImg);
+
         VBox statsUI = new VBox();
-        Scene statScene = new Scene(statsUI);
+        statsUI.setAlignment(Pos.CENTER);
+
         Text statMessages = new Text();
-        Text statLogin = new Text("Login time: " + loginDate);
+        Text statLogin = new Text("Login time: " + loginDate);        // stores login time and date of user
+
         statsUI.getChildren().addAll(statLogin, statMessages);
+
+        Scene statScene = new Scene(statsUI);
 
 
         // switches scene to Naming UI where users will be able to change their username
@@ -287,9 +301,10 @@ public class Client extends Application {
         });
 
 
+        // opens new window where stats are shown
         stats.setOnAction(e -> {
             statStage.setScene(statScene);
-            statMessages.setText("Total number of messages in chat: " + String.valueOf(sendTexts.valueProperty().getValue()));
+            statMessages.setText("\nTotal number of messages in chat: " + sendTexts.valueProperty().getValue());
             statStage.setWidth(400);
             statStage.setHeight(200);
             statStage.show();
