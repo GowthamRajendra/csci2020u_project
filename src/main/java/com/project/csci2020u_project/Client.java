@@ -6,6 +6,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
@@ -19,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Client extends Application {
 
@@ -44,6 +48,19 @@ public class Client extends Application {
         Button sendButton = new Button("Send");
         Button exitButton = new Button("Exit");
 
+        Button uploadButton = new Button();
+        uploadButton.setPrefSize(10,10);
+
+        Path path = Paths.get("uploadIcon.png");
+
+        Image img = new Image("file:uploadIcon.png");
+        ImageView imageView = new ImageView(img);
+        imageView.setFitHeight(10);
+        imageView.setFitWidth(10);
+        imageView.setPreserveRatio(true);
+
+        uploadButton.setGraphic(imageView);
+
         VBox vBox = new VBox();
 
         TextArea textArea = new TextArea();
@@ -56,7 +73,7 @@ public class Client extends Application {
 
         HBox hBoxMessage = new HBox();
         hBoxMessage.setPadding(new Insets(10));
-        hBoxMessage.getChildren().addAll(messageTF,sendButton);
+        hBoxMessage.getChildren().addAll(uploadButton,messageTF,sendButton);
         hBoxMessage.setSpacing(20);
 
         Menu menu = new Menu("Options");
@@ -120,7 +137,7 @@ public class Client extends Application {
         primaryStage.setTitle("Client");
         Scene scene = new Scene(vBox);
         primaryStage.setScene(scene);
-        primaryStage.setWidth( 500 );
+        primaryStage.setWidth( 550 );
         primaryStage.setHeight( 500 );
         primaryStage.setResizable(false);
         primaryStage.show();
