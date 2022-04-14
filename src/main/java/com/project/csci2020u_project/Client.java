@@ -2,16 +2,20 @@ package com.project.csci2020u_project;
 
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -26,6 +30,8 @@ import java.nio.file.Paths;
 
 public class Client extends Application {
 
+    String name = "";
+
     public Client() {}
 
     @Override
@@ -34,10 +40,22 @@ public class Client extends Application {
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
-        GridPane gp = new GridPane();
-        gp.setPadding( new Insets(20) );
-        gp.setHgap( 10 );
-        gp.setVgap( 10 );
+        GridPane gp1 = new GridPane();
+        GridPane gp2 = new GridPane();
+        gp1.setPadding( new Insets(20) );
+        gp1.setHgap( 10 );
+        gp1.setVgap( 10 );
+
+        gp2.setPadding( new Insets(20) );
+        gp2.setHgap( 10 );
+        gp2.setVgap( 10 );
+
+        TextArea textArea = new TextArea();
+        textArea.setWrapText(true);
+        textArea.editableProperty().setValue(false);
+        textArea.setPrefColumnCount(400);
+        textArea.setPrefRowCount(400);
+        //textArea.setPrefHeight(1200.0);
 
         Label usernameLBL = new Label("Username: ");
         TextField usernameTF = new TextField();
@@ -46,6 +64,8 @@ public class Client extends Application {
         TextField messageTF = new TextField();
 
         Button sendButton = new Button("Send");
+        Button confirmButton = new Button("Confirm");
+        Button renameButton = new Button("Rename");
         Button exitButton = new Button("Exit");
 
         Button uploadButton = new Button();
@@ -93,7 +113,7 @@ public class Client extends Application {
 
                 while (sock.isConnected())
                 {
-                    sendButton.setOnAction(e -> pWriter.println(usernameTF.getText() + ": " + messageTF.getText()));
+                    sendButton.setOnAction(e -> pWriter.println(name + ": " + messageTF.getText()));
                     messageTF.clear();
 
                     String line;
@@ -101,7 +121,6 @@ public class Client extends Application {
                     {
                         textArea.appendText(line + " \n");
                         System.out.println(line);
-
                     }
                 }
 
@@ -132,7 +151,6 @@ public class Client extends Application {
             }
         });
 
-
         vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
         primaryStage.setTitle("Client");
         Scene scene = new Scene(vBox);
@@ -141,6 +159,47 @@ public class Client extends Application {
         primaryStage.setHeight( 500 );
         primaryStage.setResizable(false);
         primaryStage.show();
+=======/*
+        gp1.add(textArea, 0, 0);
+        gp2.add(usernameLBL, 0, 1);
+        gp2.add(usernameTF, 1, 1);
+        gp2.add(messageLBL, 0, 2);
+        gp2.add(messageTF, 1, 2);
+        gp2.add(sendButton, 2, 2);
+        gp2.add(exitButton, 0, 4);
+        gp2.add(renameButton, 1, 4);
+
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+
+        // Naming UI (Default for choose name first)
+        HBox renameUI = new HBox(usernameLBL, usernameTF, confirmButton);
+        Scene renameScene = new Scene(renameUI);
+        primaryStage.setScene(renameScene);
+        primaryStage.setWidth( 400 );
+        primaryStage.setHeight( 400 );
+        primaryStage.show();
+
+        // Main UI
+        VBox vBox = new VBox(gp1, gp2);
+        primaryStage.setTitle("Client");
+        Scene mainScene = new Scene(vBox);
+
+        renameButton.setOnAction(e -> {
+            primaryStage.setScene(renameScene);
+            primaryStage.setWidth(400);
+            primaryStage.setHeight(400);
+            primaryStage.show();
+        });
+
+        confirmButton.setOnAction(e -> {
+            name = usernameTF.getText();
+            primaryStage.setScene(mainScene);
+            primaryStage.setWidth( 1000 );
+            primaryStage.setHeight( 1000 );
+            primaryStage.show();
+        });
+      */
     }
 
     public static void main(String[] args) {
