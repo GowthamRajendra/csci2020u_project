@@ -131,16 +131,15 @@ public class Client extends Application {
 
         renameButton.setOnAction(e -> {
             primaryStage.setScene(renameScene);
-            primaryStage.setWidth(400);
-            primaryStage.setHeight(400);
+            primaryStage.setWidth( 400 );
+            primaryStage.setHeight( 400 );
             primaryStage.show();
         });
 
         confirmButton.setOnAction(e -> {
             name = usernameTF.getText();
             primaryStage.setScene(mainScene);
-            primaryStage.setWidth( 1000 );
-            primaryStage.setHeight( 1000 );
+            primaryStage.setMaximized(true);
             primaryStage.show();
         });
     }
