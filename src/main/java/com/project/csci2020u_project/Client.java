@@ -1,22 +1,18 @@
 package com.project.csci2020u_project;
-
 import javafx.application.Application;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Client extends Application {
 
@@ -42,6 +38,63 @@ public class Client extends Application {
         Button sendButton = new Button("Send");
         Button exitButton = new Button("Exit");
 
+        VBox vBox = new VBox();
+
+        TextArea textArea = new TextArea();
+        textArea.setWrapText(true);
+        textArea.editableProperty().setValue(false);
+        textArea.setPrefColumnCount(400);
+        textArea.setPrefRowCount(400);
+
+        messageTF.setPrefWidth(400);
+
+        HBox hBoxMessage = new HBox();
+        hBoxMessage.setPadding(new Insets(10));
+        hBoxMessage.getChildren().addAll(messageTF,sendButton);
+        hBoxMessage.setSpacing(20);
+
+        Menu menu = new Menu("Options");
+
+        MenuItem rename = new MenuItem("Rename");
+        MenuItem exit = new MenuItem("Exit");
+        MenuItem filechooser = new MenuItem("Choose File");
+
+        menu.getItems().add(rename);
+        menu.getItems().add(exit);
+        menu.getItems().add(filechooser);
+
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().add(menu);
+
+        filechooser.setOnAction(e ->{
+            String line = null;
+            String txtMsg = null;
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            File selectedSaveFile = fileOpen.showOpenDialog(primaryStage);
+
+            File path = selectedSaveFile;
+            BufferedReader input = null;
+            try {
+                input = new BufferedReader(new FileReader(path));
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            while (true) {
+                try {
+                    if (!!((line = input.readLine()) != null)) break;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            {
+                txtMsg = line;
+                textArea.appendText(txtMsg + " \n");
+                //Process line
+            }
+        });
+
         Task<String> task = new Task<>() {
             @Override
             protected String call() throws Exception {
@@ -54,7 +107,9 @@ public class Client extends Application {
                     String line;
                     if((line = bufferedReader.readLine()) != null)
                     {
+                        textArea.appendText(line + " \n");
                         System.out.println(line);
+
                     }
                 }
 
@@ -67,13 +122,16 @@ public class Client extends Application {
         t.setDaemon(true);
         t.start();
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            public void handle(WindowEvent we) {
-                exitButton.fire();
+        primaryStage.setOnCloseRequest(we -> exit.fire());
+
+        messageTF.setOnKeyPressed(event -> {
+            if(event.getCode().equals(KeyCode.ENTER))
+            {
+                sendButton.fire();
             }
         });
 
-        exitButton.setOnAction(e -> {
+        exit.setOnAction(e -> {
             primaryStage.close();
             try {
                 sock.close(); // close socket when exiting the ui so a new client is able to connect.
@@ -82,18 +140,14 @@ public class Client extends Application {
             }
         });
 
-        gp.add(usernameLBL, 0, 0);
-        gp.add(usernameTF, 1, 0);
-        gp.add(messageLBL, 0, 1);
-        gp.add(messageTF, 1, 1);
-        gp.add(sendButton, 0, 2);
-        gp.add(exitButton, 0, 3);
 
+        vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
         primaryStage.setTitle("Client");
-        Scene scene = new Scene(gp);
+        Scene scene = new Scene(vBox);
         primaryStage.setScene(scene);
-        primaryStage.setWidth( 300 );
-        primaryStage.setHeight( 200 );
+        primaryStage.setWidth( 500 );
+        primaryStage.setHeight( 500 );
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
