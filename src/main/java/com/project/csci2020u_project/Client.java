@@ -1,7 +1,14 @@
 package com.project.csci2020u_project;
-
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -18,13 +25,10 @@ import javafx.scene.layout.Priority;
 
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicReference;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -86,6 +90,41 @@ public class Client extends Application {
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(menu);
 
+        messageTF.setPrefWidth(400);
+
+        uploadButton.setOnAction(e ->{
+            String line = null;
+            String txtMsg = null;
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            File selectedSaveFile = fileOpen.showOpenDialog(primaryStage);
+
+            File path = selectedSaveFile;
+            BufferedReader input = null;
+            try {
+                input = new BufferedReader(new FileReader(path));
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            while (true) {
+                try {
+                    if (((line = input.readLine()) == null)) break;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                txtMsg = line;
+                textArea.appendText(name + ": " + txtMsg + " \n");
+                //Process line
+            }
+            try {
+                input.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
         Task<String> task = new Task<>() {
             @Override
             protected String call() throws Exception {
@@ -100,6 +139,7 @@ public class Client extends Application {
                     {
                         textArea.appendText(line + " \n");
                         System.out.println(line);
+
                     }
                 }
 
