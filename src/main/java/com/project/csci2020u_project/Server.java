@@ -16,7 +16,7 @@ public class Server {
             while(true) {
                 System.out.println("Waiting for clients...");
                 socket = serverSocket.accept();
-                System.out.println("Connected");
+                System.out.println(socket.getInetAddress().getHostAddress() + " Connected");
                 ClientHandler clientThread = new ClientHandler(socket, clients);
                 clients.add(clientThread);
                 clientThread.start();

@@ -2,6 +2,7 @@ package com.project.csci2020u_project;
 
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -9,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,6 +49,7 @@ public class Client extends Application {
                 while (sock.isConnected())
                 {
                     sendButton.setOnAction(e -> pWriter.println(usernameTF.getText() + ": " + messageTF.getText()));
+                    messageTF.clear();
 
                     String line;
                     if((line = bufferedReader.readLine()) != null)
@@ -63,6 +66,12 @@ public class Client extends Application {
         Thread t = new Thread(task);
         t.setDaemon(true);
         t.start();
+
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            public void handle(WindowEvent we) {
+                exitButton.fire();
+            }
+        });
 
         exitButton.setOnAction(e -> {
             primaryStage.close();

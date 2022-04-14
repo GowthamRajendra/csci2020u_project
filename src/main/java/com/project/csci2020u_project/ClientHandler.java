@@ -30,6 +30,8 @@ public class ClientHandler extends Thread {
         try {
             String msg;
             while ((msg = reader.readLine()) != null) {
+                clients.removeIf(i -> i.socket.isClosed()); // removes closed clients from arraylist
+
                 for (ClientHandler cl : clients) {
                     cl.writer.println(msg);
                     System.out.println(msg);
