@@ -55,6 +55,7 @@ public class Client extends Application {
         TextField usernameTF = new TextField();
 
         TextField messageTF = new TextField();
+        messageTF.setPrefWidth(400);
 
         Button sendButton = new Button("Send");
         Button confirmButton = new Button("Confirm");
@@ -72,8 +73,6 @@ public class Client extends Application {
 
         VBox vBox = new VBox();
 
-        messageTF.setPrefWidth(400);
-
         HBox hBoxMessage = new HBox();
         hBoxMessage.setPadding(new Insets(10));
         hBoxMessage.getChildren().addAll(uploadButton,messageTF,sendButton);
@@ -83,15 +82,40 @@ public class Client extends Application {
 
         MenuItem rename = new MenuItem("Rename");
         MenuItem exit = new MenuItem("Exit");
+        MenuItem savetxt = new MenuItem("Save Text");
 
         menu.getItems().add(rename);
+        menu.getItems().add(savetxt);
         menu.getItems().add(exit);
 
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(menu);
 
-        messageTF.setPrefWidth(400);
+        // Saving the chat log into a .txt file
+        savetxt.setOnAction(e ->{
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            File selectedSaveFile = fileOpen.showSaveDialog(primaryStage);
 
+            File path = selectedSaveFile;
+            FileWriter file = null;
+            try {
+                file = new FileWriter(path);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            BufferedWriter output = new BufferedWriter(file);
+            try {
+                output.write(textArea.getText());
+                output.flush();
+                output.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        // Uploading the contents of a .txt file into the chat room
         uploadButton.setOnAction(e ->{
             String line = null;
             String txtMsg = null;
@@ -114,9 +138,7 @@ public class Client extends Application {
                     ex.printStackTrace();
                 }
 
-                txtMsg = line;
-                textArea.appendText(name + ": " + txtMsg + " \n");
-                //Process line
+                pWriter.println(name + ": " + line); // print to clients
             }
             try {
                 input.close();
@@ -125,7 +147,7 @@ public class Client extends Application {
             }
         });
 
-        Task<String> task = new Task<>() {
+        Task<String> sendTexts = new Task<>() {
             @Override
             protected String call() throws Exception {
 
@@ -143,12 +165,11 @@ public class Client extends Application {
                     }
                 }
 
-
                 return null;
             }
         };
 
-        Thread t = new Thread(task);
+        Thread t = new Thread(sendTexts);
         t.setDaemon(true);
         t.start();
 
