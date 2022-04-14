@@ -8,13 +8,33 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicReference;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Client extends Application {
+
+    String name = "";
 
     public Client() {}
 
@@ -24,49 +44,55 @@ public class Client extends Application {
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
-        GridPane gp = new GridPane();
-        gp.setPadding( new Insets(20) );
-        gp.setHgap( 10 );
-        gp.setVgap( 10 );
-
-        Label usernameLBL = new Label("Username: ");
-        TextField usernameTF = new TextField();
-
-        Label messageLBL = new Label("Message:");
-        TextField messageTF = new TextField();
-
-        Button sendButton = new Button("Send");
-        Button exitButton = new Button("Exit");
-
-        VBox vBox = new VBox();
-
         TextArea textArea = new TextArea();
         textArea.setWrapText(true);
         textArea.editableProperty().setValue(false);
         textArea.setPrefColumnCount(400);
         textArea.setPrefRowCount(400);
+        //textArea.setPrefHeight(1200.0);
+
+        Label usernameLBL = new Label("Username: ");
+        TextField usernameTF = new TextField();
+
+        TextField messageTF = new TextField();
+
+        Button sendButton = new Button("Send");
+        Button confirmButton = new Button("Confirm");
+
+        Button uploadButton = new Button();
+        uploadButton.setPrefSize(10,10);
+
+        Image img = new Image("file:uploadIcon.png");
+        ImageView imageView = new ImageView(img);
+        imageView.setFitHeight(10);
+        imageView.setFitWidth(10);
+        imageView.setPreserveRatio(true);
+
+        uploadButton.setGraphic(imageView);
+
+        VBox vBox = new VBox();
 
         messageTF.setPrefWidth(400);
 
         HBox hBoxMessage = new HBox();
         hBoxMessage.setPadding(new Insets(10));
-        hBoxMessage.getChildren().addAll(messageTF,sendButton);
+        hBoxMessage.getChildren().addAll(uploadButton,messageTF,sendButton);
         hBoxMessage.setSpacing(20);
 
         Menu menu = new Menu("Options");
 
         MenuItem rename = new MenuItem("Rename");
         MenuItem exit = new MenuItem("Exit");
-        MenuItem filechooser = new MenuItem("Choose File");
 
         menu.getItems().add(rename);
         menu.getItems().add(exit);
-        menu.getItems().add(filechooser);
 
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(menu);
 
-        filechooser.setOnAction(e ->{
+        messageTF.setPrefWidth(400);
+
+        uploadButton.setOnAction(e ->{
             String line = null;
             String txtMsg = null;
             FileChooser fileOpen = new FileChooser();
@@ -83,15 +109,19 @@ public class Client extends Application {
             }
             while (true) {
                 try {
-                    if (!!((line = input.readLine()) != null)) break;
+                    if (((line = input.readLine()) == null)) break;
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-            }
-            {
+
                 txtMsg = line;
-                textArea.appendText(txtMsg + " \n");
+                textArea.appendText(name + ": " + txtMsg + " \n");
                 //Process line
+            }
+            try {
+                input.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         });
 
@@ -101,7 +131,7 @@ public class Client extends Application {
 
                 while (sock.isConnected())
                 {
-                    sendButton.setOnAction(e -> pWriter.println(usernameTF.getText() + ": " + messageTF.getText()));
+                    sendButton.setOnAction(e -> pWriter.println(name + ": " + messageTF.getText()));
                     messageTF.clear();
 
                     String line;
@@ -140,15 +170,34 @@ public class Client extends Application {
             }
         });
 
+        // Naming UI (Default for choose name first)
+        HBox renameUI = new HBox(usernameLBL, usernameTF, confirmButton);
+        Scene renameScene = new Scene(renameUI);
+        primaryStage.setScene(renameScene);
+        primaryStage.setWidth( 400 );
+        primaryStage.setHeight( 400 );
+        primaryStage.show();
 
+        // Main UI
         vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
         primaryStage.setTitle("Client");
-        Scene scene = new Scene(vBox);
-        primaryStage.setScene(scene);
-        primaryStage.setWidth( 500 );
-        primaryStage.setHeight( 500 );
-        primaryStage.setResizable(false);
-        primaryStage.show();
+        Scene mainScene = new Scene(vBox);
+
+        rename.setOnAction(e -> {
+            primaryStage.setScene(renameScene);
+            primaryStage.setWidth(400);
+            primaryStage.setHeight(400);
+            primaryStage.show();
+        });
+
+        confirmButton.setOnAction(e -> {
+            name = usernameTF.getText();
+            primaryStage.setScene(mainScene);
+            primaryStage.setWidth( 550 );
+            primaryStage.setHeight( 500 );
+            primaryStage.setResizable(false);
+            primaryStage.show();
+        });
     }
 
     public static void main(String[] args) {
