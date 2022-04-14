@@ -6,20 +6,19 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Server {
-    private static ArrayList<ClientHandler> clients = new ArrayList<>();
+    private static final ArrayList<ClientHandler> clients = new ArrayList<>();
 
     public static void main(String[] args) {
-        ServerSocket serverSocket;
-        Socket socket;
         try {
-            serverSocket = new ServerSocket(6666);
+            ServerSocket serverSocket = new ServerSocket(6666);
+            // loop that waits for users to connect to the server
             while(true) {
-                System.out.println("Waiting for clients...");
-                socket = serverSocket.accept();
+                System.out.println("Waiting for users to connect...");
+                Socket socket = serverSocket.accept();
                 System.out.println(socket.getInetAddress().getHostAddress() + " Connected");
-                ClientHandler clientThread = new ClientHandler(socket, clients);
-                clients.add(clientThread);
-                clientThread.start();
+                ClientHandler clientThread = new ClientHandler(socket, clients); // creates instance for new client
+                clients.add(clientThread); // adds new client to list
+                clientThread.start(); // starts thread for client where their messages will be handled
             }
         } catch (IOException e) {
             e.printStackTrace();

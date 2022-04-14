@@ -2,99 +2,324 @@ package com.project.csci2020u_project;
 
 import javafx.application.Application;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.util.Date;
 
 public class Client extends Application {
+
+    String name = "";
+    int messageCount = 0;
+    Date date = new Date();
 
     public Client() {}
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        // 'localhost' would be replaced by the IP address of the user hosting the server
         Socket sock = new Socket("localhost", 6666);
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        String loginDate = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date);
 
-        GridPane gp = new GridPane();
-        gp.setPadding( new Insets(20) );
-        gp.setHgap( 10 );
-        gp.setVgap( 10 );
+        // creating big text area that will serve as the chatroom
+        TextArea chatArea = new TextArea();
+        chatArea.setWrapText(true);
+        chatArea.editableProperty().setValue(false);
+        chatArea.setPrefColumnCount(400);
+        chatArea.setPrefRowCount(400);
 
-        Label usernameLBL = new Label("Username: ");
+        Label usernameLBL = new Label("Choose a username: ");
         TextField usernameTF = new TextField();
 
-        Label messageLBL = new Label("Message:");
         TextField messageTF = new TextField();
+        messageTF.setPrefWidth(400);  // making text field longer
 
-        Button sendButton = new Button("Send");
-        Button exitButton = new Button("Exit");
+        Button confirmButton = new Button("Confirm");
 
-        Task<String> task = new Task<>() {
-            @Override
-            protected String call() throws Exception {
+        // creating button that lets user upload a text file
+        Button uploadButton = new Button();
+        uploadButton.setPrefSize(10,10);
 
-                while (sock.isConnected())
-                {
-                    sendButton.setOnAction(e -> pWriter.println(usernameTF.getText() + ": " + messageTF.getText()));
-                    messageTF.clear();
+        // setting image for the upload button
+        Image uploadImg = new Image("file:icons/uploadIcon.png");
+        ImageView uploadImageView = new ImageView(uploadImg);
+        uploadImageView.setFitHeight(10);
+        uploadImageView.setFitWidth(10);
+        uploadImageView.setPreserveRatio(true);
 
-                    String line;
-                    if((line = bufferedReader.readLine()) != null)
-                    {
-                        System.out.println(line);
-                    }
-                }
+        uploadButton.setGraphic(uploadImageView);
 
+        // creating button that lets user send message
+        Button sendButton = new Button("");
+        sendButton.setPrefSize(10,10);
 
-                return null;
-            }
-        };
+        // setting image for the send button
+        Image sendImg = new Image("file:icons/sendIcon.jpg");
+        ImageView sendImageView = new ImageView(sendImg);
+        sendImageView.setFitHeight(15);
+        sendImageView.setFitWidth(15);
+        sendImageView.setPreserveRatio(true);
 
-        Thread t = new Thread(task);
-        t.setDaemon(true);
-        t.start();
+        sendButton.setGraphic(sendImageView);
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            public void handle(WindowEvent we) {
-                exitButton.fire();
-            }
-        });
+        // HBox where the user can message and send as well as upload a file
+        HBox hBoxMessage = new HBox();
+        hBoxMessage.setPadding(new Insets(10));
+        hBoxMessage.getChildren().addAll(uploadButton,messageTF,sendButton);
+        hBoxMessage.setSpacing(20);
 
-        exitButton.setOnAction(e -> {
-            primaryStage.close();
+        // creating an options menu
+        Menu menu = new Menu("Options");
+
+        // setting image for options menu
+        Image menuGearImg = new Image("file:icons/gearIcon.png");
+        ImageView menuImageView = new ImageView(menuGearImg);
+        menuImageView.setFitHeight(15);
+        menuImageView.setFitWidth(15);
+        menuImageView.setPreserveRatio(true);
+
+        menu.setGraphic(menuImageView);
+
+        // setting image for rename option
+        Image renameImg = new Image("file:icons/renameIcon.png");
+        ImageView renameImgView = new ImageView(renameImg);
+        renameImgView.setFitHeight(15);
+        renameImgView.setFitWidth(15);
+        renameImgView.setPreserveRatio(true);
+
+        // setting image for leave option
+        Image leaveImg = new Image("file:icons/leaveIcon.png");
+        ImageView leaveImgView = new ImageView(leaveImg);
+        leaveImgView.setFitHeight(15);
+        leaveImgView.setFitWidth(15);
+        leaveImgView.setPreserveRatio(true);
+
+        // setting image for save option (lets user save current chat into text file)
+        Image saveImg = new Image("file:icons/saveIcon.png");
+        ImageView saveImgView = new ImageView(saveImg);
+        saveImgView.setFitHeight(15);
+        saveImgView.setFitWidth(15);
+        saveImgView.setPreserveRatio(true);
+
+        // setting image for stats option (lets user see sats of current chatroom)
+        Image statsImg = new Image("file:icons/statsIcon.png");
+        ImageView statsImgView = new ImageView(statsImg);
+        statsImgView.setFitHeight(15);
+        statsImgView.setFitWidth(15);
+        statsImgView.setPreserveRatio(true);
+
+        // creating and adding options
+        MenuItem rename = new MenuItem("Rename", renameImgView);
+        MenuItem exit = new MenuItem("Leave",leaveImgView);
+        MenuItem saveText = new MenuItem("Save Text", saveImgView);
+        MenuItem stats = new MenuItem("User Stats", statsImgView);
+
+        menu.getItems().addAll(rename, saveText, stats, exit);
+
+        // creating the menu bar
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().add(menu);
+
+        // Saving the chat log into a text file when the save option is pressed
+        saveText.setOnAction(e ->{
+            // opening file chooser to let user save the text file
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files","*.txt"));
+            File selectedSaveFile = fileOpen.showSaveDialog(primaryStage);
+
+            // writing to text file
+            FileWriter file = null;
             try {
-                sock.close(); // close socket when exiting the ui so a new client is able to connect.
+                file = new FileWriter(selectedSaveFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            BufferedWriter output = new BufferedWriter(file);
+            try {
+                output.write(chatArea.getText());
+                output.flush();
+                output.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         });
 
-        gp.add(usernameLBL, 0, 0);
-        gp.add(usernameTF, 1, 0);
-        gp.add(messageLBL, 0, 1);
-        gp.add(messageTF, 1, 1);
-        gp.add(sendButton, 0, 2);
-        gp.add(exitButton, 0, 3);
+        // Uploading the contents of text file into chat room
+        uploadButton.setOnAction(e ->{
+            String line = null;
 
-        primaryStage.setTitle("Client");
-        Scene scene = new Scene(gp);
-        primaryStage.setScene(scene);
-        primaryStage.setWidth( 300 );
+            // opening file chooser to let user upload text file
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files","*.txt"));
+            File selectedOpenFile = fileOpen.showOpenDialog(primaryStage);
+
+            // reading in text file
+            BufferedReader input = null;
+            try {
+                input = new BufferedReader(new FileReader(selectedOpenFile));
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            while (true) {
+                try {
+                    if (input != null && ((line = input.readLine()) == null)) break;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                // print to every user connected to the chatroom
+                pWriter.println(name + ": " + line);
+            }
+            try {
+                input.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+
+        // task that handles sending and receiving messages from the server
+        Task<Integer> sendTexts = new Task<>() {
+            @Override
+            protected Integer call() throws Exception {
+
+                // loops as long as user is connected
+                while (sock.isConnected())
+                {
+                    // sends message to the server when send button is pressed
+                    sendButton.setOnAction(e -> pWriter.println(name + ": " + messageTF.getText()));
+                    messageTF.clear();
+                    updateValue(messageCount++);
+
+                    // receive messages from server to display on the chatroom
+                    String line;
+                    if((line = bufferedReader.readLine()) != null)
+                    {
+                        chatArea.appendText(line + " \n");
+                    }
+                }
+
+                return null;
+            }
+        };
+
+        // starts thread for socket
+        // sendTexts has separate thread so the ui doesn't freeze up
+        Thread t = new Thread(sendTexts);
+        t.setDaemon(true);
+        t.start();
+
+        // if user closes window instead of using exit button, redirects to exit button event handler so socket is closed
+        primaryStage.setOnCloseRequest(we -> exit.fire());
+
+        // lets user press the enter key to send messages by redirecting to the send button event handler
+        messageTF.setOnKeyPressed(event -> {
+            if(event.getCode().equals(KeyCode.ENTER))
+            {
+                sendButton.fire();
+            }
+        });
+
+        // lets user press the enter key to confirm their username by redirecting to the confirm button event handler
+        usernameTF.setOnKeyPressed(event -> {
+            if(event.getCode().equals(KeyCode.ENTER))
+            {
+                confirmButton.fire();
+            }
+        });
+
+
+        // closes socket and closes the window when exit button is pressed
+        exit.setOnAction(e -> {
+            primaryStage.close();
+            try {
+                sock.close(); // close socket when exiting the UI so a new client is able to connect
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        // setting image of stage
+        Image stageIcon = new Image("file:icons/chatIcon.png");
+        primaryStage.getIcons().add(stageIcon);
+
+        // Naming UI where users will be able to choose/change their username
+        // this scene is shown when user first connects
+        HBox renameUI = new HBox(usernameLBL, usernameTF, confirmButton);
+        renameUI.setAlignment(Pos.CENTER);
+        renameUI.setSpacing(20);
+        Scene renameScene = new Scene(renameUI);
+        primaryStage.setScene(renameScene);
+        primaryStage.setWidth( 400 );
         primaryStage.setHeight( 200 );
         primaryStage.show();
+
+        // Main UI where users will be able to chat
+        VBox chatroomVbox = new VBox();
+        chatroomVbox.getChildren().addAll(menuBar,chatArea,hBoxMessage);
+        primaryStage.setTitle("Chatroom");
+        Scene mainScene = new Scene(chatroomVbox);
+
+        //Stats UI where stats of the current chatroom is shown (opens new window)
+        Stage statStage = new Stage();
+        statStage.setTitle("Statistics");
+        statStage.getIcons().add(statsImg);
+
+        VBox statsUI = new VBox();
+        statsUI.setAlignment(Pos.CENTER);
+
+        Text statMessages = new Text();
+        Text statLogin = new Text("Login time: " + loginDate);        // stores login time and date of user
+
+        statsUI.getChildren().addAll(statLogin, statMessages);
+
+        Scene statScene = new Scene(statsUI);
+
+
+        // switches scene to Naming UI where users will be able to change their username
+        rename.setOnAction(e -> {
+            primaryStage.setScene(renameScene);
+            primaryStage.setWidth(400);
+            primaryStage.setHeight(200);
+            primaryStage.show();
+        });
+
+
+        // opens new window where stats are shown
+        stats.setOnAction(e -> {
+            statStage.setScene(statScene);
+            statMessages.setText("\nTotal number of messages in chat: " + sendTexts.valueProperty().getValue());
+            statStage.setWidth(400);
+            statStage.setHeight(200);
+            statStage.show();
+        });
+
+
+        // button that lets users confirm their chosen username
+        confirmButton.setOnAction(e -> {
+            name = usernameTF.getText();
+            primaryStage.setScene(mainScene);
+            primaryStage.setWidth( 500 );
+            primaryStage.setHeight( 500 );
+            primaryStage.setResizable(false);
+            primaryStage.show();
+        });
     }
 
     public static void main(String[] args) {
