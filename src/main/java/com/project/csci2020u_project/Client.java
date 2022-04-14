@@ -1,38 +1,30 @@
 package com.project.csci2020u_project;
+
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-
-import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.concurrent.atomic.AtomicReference;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 public class Client extends Application {
 
     String name = "";
+    int messageCount = 0;
+    Date date = new Date();
 
     public Client() {}
 
@@ -41,6 +33,7 @@ public class Client extends Application {
         Socket sock = new Socket("localhost", 6666);
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        String loginDate = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date);
 
         TextArea textArea = new TextArea();
         textArea.setWrapText(true);
@@ -111,10 +104,9 @@ public class Client extends Application {
         MenuItem rename = new MenuItem("Rename", renameImgView);
         MenuItem exit = new MenuItem("Exit",leaveImgView);
         MenuItem savetxt = new MenuItem("Save Text");
+        MenuItem stats = new MenuItem("User Stats");
 
-        menu.getItems().add(rename);
-        menu.getItems().add(savetxt);
-        menu.getItems().add(exit);
+        menu.getItems().addAll(rename, savetxt, stats, exit);
 
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(menu);
@@ -146,7 +138,6 @@ public class Client extends Application {
         // Uploading the contents of a .txt file into the chat room
         uploadButton.setOnAction(e ->{
             String line = null;
-            String txtMsg = null;
             FileChooser fileOpen = new FileChooser();
             fileOpen.setTitle("Open");
             fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
@@ -161,7 +152,7 @@ public class Client extends Application {
             }
             while (true) {
                 try {
-                    if (((line = input.readLine()) == null)) break;
+                    if (input != null && ((line = input.readLine()) == null)) break;
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -175,14 +166,16 @@ public class Client extends Application {
             }
         });
 
-        Task<String> sendTexts = new Task<>() {
+        // JavaFX Task that sends messages
+        Task<Integer> sendTexts = new Task<>() {
             @Override
-            protected String call() throws Exception {
+            protected Integer call() throws Exception {
 
                 while (sock.isConnected())
                 {
                     sendButton.setOnAction(e -> pWriter.println(name + ": " + messageTF.getText()));
                     messageTF.clear();
+                    updateValue(messageCount++);
 
                     String line;
                     if((line = bufferedReader.readLine()) != null)
@@ -197,6 +190,7 @@ public class Client extends Application {
             }
         };
 
+        // sendTexts has seperate thread so the ui doesn't freeze up
         Thread t = new Thread(sendTexts);
         t.setDaemon(true);
         t.start();
@@ -230,7 +224,7 @@ public class Client extends Application {
         Image stageIcon = new Image("file:icons/chatIcon.png");
         primaryStage.getIcons().add(stageIcon);
 
-        // Naming UI (Default for choose name first)
+        // Naming UI (Default for choosing username first)
         HBox renameUI = new HBox(usernameLBL, usernameTF, confirmButton);
         renameUI.setAlignment(Pos.CENTER);
         renameUI.setSpacing(20);
@@ -245,11 +239,27 @@ public class Client extends Application {
         primaryStage.setTitle("Chatroom");
         Scene mainScene = new Scene(vBox);
 
+        //Stats UI
+        Stage statStage = new Stage();
+        VBox statsUI = new VBox();
+        Scene statScene = new Scene(statsUI);
+        Text statMessages = new Text();
+        Text statLogin = new Text("Login time: " + loginDate);
+        statsUI.getChildren().addAll(statLogin, statMessages);
+
         rename.setOnAction(e -> {
             primaryStage.setScene(renameScene);
             primaryStage.setWidth(400);
             primaryStage.setHeight(200);
             primaryStage.show();
+        });
+
+        stats.setOnAction(e -> {
+            statStage.setScene(statScene);
+            statMessages.setText("Total number of messages in chat: " + String.valueOf(sendTexts.valueProperty().getValue()));
+            statStage.setWidth(400);
+            statStage.setHeight(200);
+            statStage.show();
         });
 
         confirmButton.setOnAction(e -> {
