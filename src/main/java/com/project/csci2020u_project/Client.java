@@ -80,7 +80,7 @@ public class Client extends Application {
         gp.add(sendButton, 0, 2);
         gp.add(exitButton, 0, 3);
 
-        primaryStage.setTitle("ClientA");
+        primaryStage.setTitle("Client");
         Scene scene = new Scene(gp);
         primaryStage.setScene(scene);
         primaryStage.setWidth( 300 );
