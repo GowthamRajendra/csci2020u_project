@@ -7,22 +7,23 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
 import javafx.stage.Stage;
-
 import java.io.*;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.util.Date;
 
 public class Client extends Application {
 
-    String name = ""; // stores name of user
+    String name = "";
+    int messageCount = 0;
+    Date date = new Date();
 
     public Client() {}
 
@@ -32,6 +33,7 @@ public class Client extends Application {
         Socket sock = new Socket("localhost", 6666);
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        String loginDate = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(date);
 
         // creating big text area that will serve as the chatroom
         TextArea chatArea = new TextArea();
@@ -117,10 +119,9 @@ public class Client extends Application {
         MenuItem rename = new MenuItem("Rename", renameImgView);
         MenuItem exit = new MenuItem("Leave",leaveImgView);
         MenuItem saveText = new MenuItem("Save Text", saveImgView);
+        MenuItem stats = new MenuItem("User Stats");
 
-        menu.getItems().add(rename);
-        menu.getItems().add(saveText);
-        menu.getItems().add(exit);
+        menu.getItems().addAll(rename, saveText, stats, exit);
 
         // creating the menu bar
         MenuBar menuBar = new MenuBar();
@@ -154,6 +155,7 @@ public class Client extends Application {
         // Uploading the contents of text file into chat room
         uploadButton.setOnAction(e ->{
             String line = null;
+
             // opening file chooser to let user upload text file
             FileChooser fileOpen = new FileChooser();
             fileOpen.setTitle("Open");
@@ -184,10 +186,11 @@ public class Client extends Application {
             }
         });
 
+
         // task that handles sending and receiving messages from the server
-        Task<String> sendTexts = new Task<>() {
+        Task<Integer> sendTexts = new Task<>() {
             @Override
-            protected String call() throws Exception {
+            protected Integer call() throws Exception {
 
                 // loops as long as user is connected
                 while (sock.isConnected())
@@ -195,6 +198,7 @@ public class Client extends Application {
                     // sends message to the server when send button is pressed
                     sendButton.setOnAction(e -> pWriter.println(name + ": " + messageTF.getText()));
                     messageTF.clear();
+                    updateValue(messageCount++);
 
                     // receive messages from server to display on the chatroom
                     String line;
@@ -209,6 +213,7 @@ public class Client extends Application {
         };
 
         // starts thread for socket
+        // sendTexts has seperate thread so the ui doesn't freeze up
         Thread t = new Thread(sendTexts);
         t.setDaemon(true);
         t.start();
@@ -264,6 +269,15 @@ public class Client extends Application {
         primaryStage.setTitle("Chatroom");
         Scene mainScene = new Scene(chatroomVbox);
 
+        //Stats UI
+        Stage statStage = new Stage();
+        VBox statsUI = new VBox();
+        Scene statScene = new Scene(statsUI);
+        Text statMessages = new Text();
+        Text statLogin = new Text("Login time: " + loginDate);
+        statsUI.getChildren().addAll(statLogin, statMessages);
+
+
         // switches scene to Naming UI where users will be able to change their username
         rename.setOnAction(e -> {
             primaryStage.setScene(renameScene);
@@ -271,6 +285,16 @@ public class Client extends Application {
             primaryStage.setHeight(200);
             primaryStage.show();
         });
+
+
+        stats.setOnAction(e -> {
+            statStage.setScene(statScene);
+            statMessages.setText("Total number of messages in chat: " + String.valueOf(sendTexts.valueProperty().getValue()));
+            statStage.setWidth(400);
+            statStage.setHeight(200);
+            statStage.show();
+        });
+
 
         // button that lets users confirm their chosen username
         confirmButton.setOnAction(e -> {
