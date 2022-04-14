@@ -29,12 +29,14 @@ public class ClientHandler extends Thread {
     public void run() {
         try {
             String msg;
+            // loop waits for user messages
             while ((msg = reader.readLine()) != null) {
                 clients.removeIf(i -> i.socket.isClosed()); // removes closed clients from arraylist
 
+                // loop to send the messages to each client
                 for (ClientHandler cl : clients) {
                     cl.writer.println(msg);
-                    System.out.println(msg);
+                    System.out.println(msg); // prints user message to console
                 }
             }
         } catch (Exception e) {
