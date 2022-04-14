@@ -5,10 +5,12 @@ import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -42,6 +44,32 @@ public class Client extends Application {
         Button sendButton = new Button("Send");
         Button exitButton = new Button("Exit");
 
+        VBox vBox = new VBox();
+
+        TextArea textArea = new TextArea();
+        textArea.setWrapText(true);
+        textArea.editableProperty().setValue(false);
+        textArea.setPrefColumnCount(400);
+        textArea.setPrefRowCount(400);
+
+        messageTF.setPrefWidth(400);
+
+        HBox hBoxMessage = new HBox();
+        hBoxMessage.setPadding(new Insets(10));
+        hBoxMessage.getChildren().addAll(messageTF,sendButton);
+        hBoxMessage.setSpacing(20);
+
+        Menu menu = new Menu("Options");
+
+        MenuItem rename = new MenuItem("Rename");
+        MenuItem exit = new MenuItem("Exit");
+
+        menu.getItems().add(rename);
+        menu.getItems().add(exit);
+
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().add(menu);
+
         Task<String> task = new Task<>() {
             @Override
             protected String call() throws Exception {
@@ -54,7 +82,9 @@ public class Client extends Application {
                     String line;
                     if((line = bufferedReader.readLine()) != null)
                     {
+                        textArea.appendText(line + " \n");
                         System.out.println(line);
+
                     }
                 }
 
@@ -67,13 +97,16 @@ public class Client extends Application {
         t.setDaemon(true);
         t.start();
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            public void handle(WindowEvent we) {
-                exitButton.fire();
+        primaryStage.setOnCloseRequest(we -> exit.fire());
+
+        messageTF.setOnKeyPressed(event -> {
+            if(event.getCode().equals(KeyCode.ENTER))
+            {
+                sendButton.fire();
             }
         });
 
-        exitButton.setOnAction(e -> {
+        exit.setOnAction(e -> {
             primaryStage.close();
             try {
                 sock.close(); // close socket when exiting the ui so a new client is able to connect.
@@ -82,18 +115,14 @@ public class Client extends Application {
             }
         });
 
-        gp.add(usernameLBL, 0, 0);
-        gp.add(usernameTF, 1, 0);
-        gp.add(messageLBL, 0, 1);
-        gp.add(messageTF, 1, 1);
-        gp.add(sendButton, 0, 2);
-        gp.add(exitButton, 0, 3);
 
+        vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
         primaryStage.setTitle("Client");
-        Scene scene = new Scene(gp);
+        Scene scene = new Scene(vBox);
         primaryStage.setScene(scene);
-        primaryStage.setWidth( 300 );
-        primaryStage.setHeight( 200 );
+        primaryStage.setWidth( 500 );
+        primaryStage.setHeight( 500 );
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
