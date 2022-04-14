@@ -40,16 +40,6 @@ public class Client extends Application {
         PrintWriter pWriter = new PrintWriter(sock.getOutputStream(), true); // output username and message
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
-        GridPane gp1 = new GridPane();
-        GridPane gp2 = new GridPane();
-        gp1.setPadding( new Insets(20) );
-        gp1.setHgap( 10 );
-        gp1.setVgap( 10 );
-
-        gp2.setPadding( new Insets(20) );
-        gp2.setHgap( 10 );
-        gp2.setVgap( 10 );
-
         TextArea textArea = new TextArea();
         textArea.setWrapText(true);
         textArea.editableProperty().setValue(false);
@@ -60,18 +50,13 @@ public class Client extends Application {
         Label usernameLBL = new Label("Username: ");
         TextField usernameTF = new TextField();
 
-        Label messageLBL = new Label("Message:");
         TextField messageTF = new TextField();
 
         Button sendButton = new Button("Send");
         Button confirmButton = new Button("Confirm");
-        Button renameButton = new Button("Rename");
-        Button exitButton = new Button("Exit");
 
         Button uploadButton = new Button();
         uploadButton.setPrefSize(10,10);
-
-        Path path = Paths.get("uploadIcon.png");
 
         Image img = new Image("file:uploadIcon.png");
         ImageView imageView = new ImageView(img);
@@ -82,12 +67,6 @@ public class Client extends Application {
         uploadButton.setGraphic(imageView);
 
         VBox vBox = new VBox();
-
-        TextArea textArea = new TextArea();
-        textArea.setWrapText(true);
-        textArea.editableProperty().setValue(false);
-        textArea.setPrefColumnCount(400);
-        textArea.setPrefRowCount(400);
 
         messageTF.setPrefWidth(400);
 
@@ -151,27 +130,6 @@ public class Client extends Application {
             }
         });
 
-        vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
-        primaryStage.setTitle("Client");
-        Scene scene = new Scene(vBox);
-        primaryStage.setScene(scene);
-        primaryStage.setWidth( 550 );
-        primaryStage.setHeight( 500 );
-        primaryStage.setResizable(false);
-        primaryStage.show();
-=======/*
-        gp1.add(textArea, 0, 0);
-        gp2.add(usernameLBL, 0, 1);
-        gp2.add(usernameTF, 1, 1);
-        gp2.add(messageLBL, 0, 2);
-        gp2.add(messageTF, 1, 2);
-        gp2.add(sendButton, 2, 2);
-        gp2.add(exitButton, 0, 4);
-        gp2.add(renameButton, 1, 4);
-
-        GridPane.setHgrow(textArea, Priority.ALWAYS);
-        GridPane.setVgrow(textArea, Priority.ALWAYS);
-
         // Naming UI (Default for choose name first)
         HBox renameUI = new HBox(usernameLBL, usernameTF, confirmButton);
         Scene renameScene = new Scene(renameUI);
@@ -181,11 +139,11 @@ public class Client extends Application {
         primaryStage.show();
 
         // Main UI
-        VBox vBox = new VBox(gp1, gp2);
+        vBox.getChildren().addAll(menuBar,textArea,hBoxMessage);
         primaryStage.setTitle("Client");
         Scene mainScene = new Scene(vBox);
 
-        renameButton.setOnAction(e -> {
+        rename.setOnAction(e -> {
             primaryStage.setScene(renameScene);
             primaryStage.setWidth(400);
             primaryStage.setHeight(400);
@@ -195,11 +153,11 @@ public class Client extends Application {
         confirmButton.setOnAction(e -> {
             name = usernameTF.getText();
             primaryStage.setScene(mainScene);
-            primaryStage.setWidth( 1000 );
-            primaryStage.setHeight( 1000 );
+            primaryStage.setWidth( 550 );
+            primaryStage.setHeight( 500 );
+            primaryStage.setResizable(false);
             primaryStage.show();
         });
-      */
     }
 
     public static void main(String[] args) {
