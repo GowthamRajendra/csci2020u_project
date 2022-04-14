@@ -1,7 +1,16 @@
 package com.project.csci2020u_project;
-
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,11 +24,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicReference;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Client extends Application {
 
@@ -44,6 +53,7 @@ public class Client extends Application {
         TextField usernameTF = new TextField();
 
         TextField messageTF = new TextField();
+        messageTF.setPrefWidth(400);
 
         Button sendButton = new Button("");
         sendButton.setPrefSize(10,10);
@@ -69,8 +79,6 @@ public class Client extends Application {
         sendButton.setGraphic(sendImageView);
 
         VBox vBox = new VBox();
-
-        messageTF.setPrefWidth(400);
 
         HBox hBoxMessage = new HBox();
         hBoxMessage.setPadding(new Insets(10));
@@ -102,14 +110,72 @@ public class Client extends Application {
 
         MenuItem rename = new MenuItem("Rename", renameImgView);
         MenuItem exit = new MenuItem("Exit",leaveImgView);
+        MenuItem savetxt = new MenuItem("Save Text");
 
         menu.getItems().add(rename);
+        menu.getItems().add(savetxt);
         menu.getItems().add(exit);
 
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().add(menu);
 
-        Task<String> task = new Task<>() {
+        // Saving the chat log into a .txt file
+        savetxt.setOnAction(e ->{
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            File selectedSaveFile = fileOpen.showSaveDialog(primaryStage);
+
+            File path = selectedSaveFile;
+            FileWriter file = null;
+            try {
+                file = new FileWriter(path);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            BufferedWriter output = new BufferedWriter(file);
+            try {
+                output.write(textArea.getText());
+                output.flush();
+                output.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        // Uploading the contents of a .txt file into the chat room
+        uploadButton.setOnAction(e ->{
+            String line = null;
+            String txtMsg = null;
+            FileChooser fileOpen = new FileChooser();
+            fileOpen.setTitle("Open");
+            fileOpen.getExtensionFilters().add(new FileChooser.ExtensionFilter("txt Files","*.txt"));
+            File selectedSaveFile = fileOpen.showOpenDialog(primaryStage);
+
+            File path = selectedSaveFile;
+            BufferedReader input = null;
+            try {
+                input = new BufferedReader(new FileReader(path));
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            while (true) {
+                try {
+                    if (((line = input.readLine()) == null)) break;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+                pWriter.println(name + ": " + line); // print to clients
+            }
+            try {
+                input.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        Task<String> sendTexts = new Task<>() {
             @Override
             protected String call() throws Exception {
 
@@ -123,15 +189,15 @@ public class Client extends Application {
                     {
                         textArea.appendText(line + " \n");
                         System.out.println(line);
+
                     }
                 }
-
 
                 return null;
             }
         };
 
-        Thread t = new Thread(task);
+        Thread t = new Thread(sendTexts);
         t.setDaemon(true);
         t.start();
 
